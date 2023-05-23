@@ -1,0 +1,22 @@
+[run]
+# omit = salesforce/backend/tooling.py
+
+[report]
+ignore_errors = True
+exclude_lines =
+    # pragma: no cover
+    if TYPE_CHECKING:
+    raise InternalError
+    raise NotImplementedError
+    raise NotSupportedError
+    raise ImproperlyConfigured
+    ^ *\.\.\.$
+    if getattr\(settings, 'PERSON_ACCOUNT_ACTIVATED', False\):
+    if settings.PERSON_ACCOUNT_ACTIVATED:
+    if not beatbox:
+    def get_sequences\(
+    def get_key_columns\(
+
+[html]
+directory = coverage_html
+
