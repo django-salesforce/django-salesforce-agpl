@@ -46,7 +46,7 @@ def autosetup():
     with_git = os.path.isdir(relative_path('.git'))
 
     return setup(
-        name="django-salesforce",
+        name="django-salesforce-agpl",
         version=get_tagged_version(),
 
         include_package_data=True,
