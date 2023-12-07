@@ -7,10 +7,10 @@ django-salesforce
 .. image:: https://badge.fury.io/py/django-salesforce.svg
    :target: https://pypi.python.org/pypi/django-salesforce
 
-.. image:: https://img.shields.io/badge/python-3.7%20%7C%203.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-blue
+.. image:: https://img.shields.io/badge/python-3.7%20%7C%203.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue
    :target: https://www.python.org/
 
-.. image:: https://img.shields.io/badge/Django-2.0%2C%202.1%2C%202.2%20%7C%203.0%2C%203.1%20%2C%203.2%20%7C%204.0%2C%204.1%2C%204.2-blue.svg
+.. image:: https://img.shields.io/badge/Django-2.0%2C%202.1%2C%202.2%20%7C%203.0%2C%203.1%20%2C%203.2%20%7C%204.0%2C%204.1%2C%204.2%20%7C%205.0-blue.svg
    :target: https://www.djangoproject.com/
 
 This library allows you to load, edit and query the objects in any Salesforce instance
@@ -19,9 +19,9 @@ for most uses. It works by integrating with the Django ORM, allowing access to
 the objects in your SFDC instance (Salesforce .com) as if they were in a
 traditional database.
 
-Python 3.7 to 3.11, Django 2.0 to 4.2. (Tested also with Python 3.12 beta 3)
+Python 3.7 to 3.12, Django 2.0 to 5.0. (Tested also with Python 3.13 alpha 2)
 
-Use with Django 4.2 currently requires an enteprise license key DJSF_LICENSE_KEY
+Use with Django 5.0 currently requires an enteprise license key DJSF_LICENSE_KEY
 available to sponsors, or to accept an AGPL license if you install our equivalent
 package "django-salesforce-agpl" instead.
 
@@ -61,6 +61,7 @@ Install, configure a Salesforce connection, create a Salesforce model and run.
        that maybe doesn't exist now, but its path is under your control and
        doesn't redirect. This would be important if you activate other OAuth
        mode later.)
+     - SalesForce **Lightning** > Setup > Identity > OAuth and OpenID Connect Settings: Ensure that the "Allow OAuth Username-Password Flows" option is checked. This is important if you use USER/PASSWORD below, and is not the default since Summer '23.
    * ``USER`` is the username used to connect.
    * ``PASSWORD`` is a concatenation of the user's password and security token.
      Security token can be set by My Settings / Personal / Reset My Security Token
