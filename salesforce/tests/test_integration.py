@@ -22,7 +22,7 @@ from django.utils.crypto import get_random_string
 
 import salesforce
 from salesforce import router
-from salesforce.backend import DJANGO_21_PLUS, DJANGO_22_PLUS
+from salesforce.backend import DJANGO_21_PLUS, DJANGO_22_PLUS, DJANGO_50_PLUS
 from salesforce.backend.test_helpers import (  # noqa pylint:disable=unused-import
     expectedFailure, expectedFailureIf, skip, skipUnless, strtobool)
 from salesforce.backend.test_helpers import (
@@ -67,7 +67,7 @@ def refresh(obj: _M) -> _M:
     """Get the same object refreshed from the same db.
     """
     db = obj._state.db
-    qs = type(obj).objects.using(db)  # type: models_query.QuerySet[_M]
+    qs: models_query.QuerySet[_M] = type(obj).objects.using(db)
     return qs.get(pk=obj.pk)
 
 
@@ -327,7 +327,7 @@ class BasicSOQLRoTest(TestCase, LazyTestMixin):
         finally:
             contact.delete()
 
-    @skipUnless(default_is_sf, "Default database should be any Salesforce.")
+    @skipUnless(default_is_sf and DJANGO_50_PLUS, "Default database should be any Salesforce.")
     def test_default_specified_by_sf(self) -> None:
         """Verify insert of object with a field with default value on create by SF.
 
@@ -618,7 +618,7 @@ class BasicSOQLRoTest(TestCase, LazyTestMixin):
         try:
             result_count = 2
             with self.lazy_assert_n_requests(2):
-                ret = Account.objects.filter(Name='test' + uid).delete()  # type: Any
+                ret: Any = Account.objects.filter(Name='test' + uid).delete()
             self.assertEqual(ret, (2, {'example.Account': 2}))
             result_count = Account.objects.filter(Name='test' + uid).count()
             self.assertEqual(result_count, 0)
@@ -1307,7 +1307,7 @@ class BasicLeadSOQLTest(TestCase):
             Status='Open',
             Company="Some company, Ltd.",
         )
-        self.objs = []  # type: List[SalesforceModel]
+        self.objs: List[SalesforceModel] = []
         self.test_lead.save()
         # This is only for demonstration that some test can be run even with
         # non SFDC database SALESFORCE_DB_ALIAS, even if the test expects some

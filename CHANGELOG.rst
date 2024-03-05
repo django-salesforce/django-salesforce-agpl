@@ -14,6 +14,24 @@ Some items here can be marked as "internal": not ready enough or
 experimental.
 
 
+[5.0.1] not released yet
+------------------------
+* Add: Support for ``db_default`` field option in Django 5.0. It allows a seamless
+  support of the ``defaultedOnCreate`` counterpart in Salesforce.
+* Add: Support for Salesforce API 60.0 Spring '24.
+* Change: Values of ``FloatField`` are now really float, not Decimal as previously.
+* Fix: Compatibility with the current django-debug-toolbar #322
+* Fix: Introspection ``inspectdb`` of custom editable name fields #308
+* Add: FloatField is used by ``inspectdb`` for some metadata with negative decimal places
+  that are new in API 60.0.
+* Change: A license code is required also in the first half of lifetime of a LTS version
+  unless the AGPL licence is accepted.
+  Django 4.2 LTS will be unlocked together with unlocking 5.0 in August 2024
+  in Django-salesforce 5.1 release.
+* Change: License code validity may not transfer to the next django-salesforce version
+  if sponsorship ended.
+
+
 [5.0] 2023-12-07
 ----------------
 * Add: Support for Django 5.0

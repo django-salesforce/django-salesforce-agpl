@@ -19,6 +19,7 @@ from django.db.models import fields
 from django.db.models import PROTECT, DO_NOTHING  # NOQA pylint:disable=unused-import
 from django.db import models
 
+from salesforce.backend import DJANGO_50_PLUS
 from salesforce.defaults import DEFAULTED_ON_CREATE, DefaultedOnCreate, BaseDefault
 
 
@@ -110,6 +111,8 @@ class SfField(models.Field):
         self.sf_namespace = ''
         if kwargs.get('default') is DEFAULTED_ON_CREATE:
             kwargs['default'] = DefaultedOnCreate(internal_type=self.get_internal_type())
+        if 'db_default' in kwargs and not DJANGO_50_PLUS:
+            del kwargs['db_default']
         super().__init__(*args, **kwargs)
 
     def get_attname_column(self) -> Tuple[str, str]:
@@ -220,9 +223,12 @@ class DecimalField(SfField, models.DecimalField):
 class FloatField(SfField, models.FloatField):
     """FloatField for Salesforce.
 
-    It is Float in Python and the same as DecimalField in the database.
+    It is now really a float type not a Decimal.
     """
-    pass
+    def from_db_value(self, value: Any, expression: Any, connection: Any) -> Any:
+        if str(value) == '' or value is None:
+            return value
+        return float(value)
 
 
 class BooleanField(SfField, models.BooleanField):

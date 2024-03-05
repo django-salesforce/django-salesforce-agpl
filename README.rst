@@ -21,9 +21,11 @@ traditional database.
 
 Python 3.7 to 3.12, Django 2.0 to 5.0. (Tested also with Python 3.13 alpha 2)
 
-Use with Django 5.0 currently requires an enteprise license key DJSF_LICENSE_KEY
-available to sponsors, or to accept an AGPL license if you install our equivalent
-package "django-salesforce-agpl" instead.
+Use with Django 5.0 or 4.2(LTS) currently requires an enteprise license key DJSF_LICENSE_KEY
+until August 2024 unless you accept the AGPL license and install our otherwise identical
+package "django-salesforce-agpl" instead. The license keys are available to sponsors.
+Both versions will be unlocked automatically in Django-salesforce 5.1 when a key will be
+required for Django 5.1. Use with pre-release Django versions is free.
 
 
 Quick Start
@@ -98,7 +100,7 @@ Install, configure a Salesforce connection, create a Salesforce model and run.
    not important.)
 
 5. Add a setting ``DJSF_LICENSE_KEY = "Your Name or Company / email //our.signature=="``
-   if you need it for Django 4.2 now.
+   if you need it for Django 5.0 or 4.2.
 
 6. **Verify** that everything important is configured correctly by running
    the command ``python manage.py check --database=salesforce``.
@@ -299,37 +301,12 @@ but for now here are the potential pitfalls and unimplemented operations:
 Backwards-incompatible changes
 ------------------------------
 
-The most important:
+The last most important:
 
--  v4.2: Some new features implemented after June 2023 can require a license key
+-  v4.2: Some new features or versions implemented after June 2023 can require a license key
    (sponsorship) or to accept the AGPL license. (AGPL is fine for exclusive open source
    contribution or for education, but impossible if you do not share all your
    source codes.)
+   Removed support for Python 3.6
 
 -  v4.0: Removed support for Python 3.5
-
--  v3.2: Removed support for Django 1.11
-
--  v1.0: The object ``salesforce.backend.operations.DefaultedOnCreate`` in an incidental
-   old migration should be rewritten to new ``salesforce.fields.DefaultedOnCreate``, but
-   old migrations are unnecessary usually.
-
--  v0.9: This is the last version that suports Django 1.10 and Python 2.7 and 3.4
-
--  v0.8: The default Meta option if now ``managed = True``, which is an important
-   change for non-Salesforce databases (see about Migrations above).
-
-   Completely different implementation of raw queries and cursor that is compatible
-   with normal databases. (a more backward compatible option can be added if
-   it will be required)
-
-   Custom exception classes has been moved to ``salesforce.dbapi.exceptions``.
-
--  v0.7.2: This is the last code that supports old Django 1.8.4+ and 1.9
-
--  v0.6.9: This is the last code that supports old Django 1.7 and 1.8.0 - 1.8.3
-
--  v0.6.1: This is the last code that supports old Django 1.4, 1.5, 1.6.
-
--  v0.5: The name of primary key is currently ``'id'``. The backward compatible
-   behavior for code created before v0.5 can be reached by settings ``SF_PK='Id'``.
