@@ -68,7 +68,7 @@ def autosetup():
         long_description_content_type="text/x-rst",
         license="AGPL",
         keywords="django salesforce orm backend",
-        url="https://github.com/django-salesforce/django-salesforce",
+        url="https://github.com/django-salesforce/django-salesforce-agpl",
     )
 
 
