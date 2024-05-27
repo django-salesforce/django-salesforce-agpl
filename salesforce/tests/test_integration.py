@@ -15,14 +15,14 @@ from typing import Any, cast, List, TypeVar
 import pytz
 from django.conf import settings
 from django.db import connections
-from django.db.models import Q, Avg, Count, Sum, Min, Max, Model, query as models_query
+from django.db.models import Q, Avg, Count, Sum, Min, Max, Model, query as models_query, functions
 from django.test import TestCase, override_settings
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 
 import salesforce
 from salesforce import router
-from salesforce.backend import DJANGO_21_PLUS, DJANGO_22_PLUS, DJANGO_50_PLUS
+from salesforce.backend import DJANGO_22_PLUS, DJANGO_50_PLUS
 from salesforce.backend.test_helpers import (  # noqa pylint:disable=unused-import
     expectedFailure, expectedFailureIf, skip, skipUnless, strtobool)
 from salesforce.backend.test_helpers import (
@@ -58,10 +58,9 @@ def sf_tables() -> List[str]:
     return _sf_tables
 
 
-# The field name 'id' or 'Id' must be never used in Python code in tests that
-# should work with both variants of SF_PK. The universale name 'pk' should be
-# used insted.
-# The name 'Id' should be used in SQL code, but the name 'id' would work just as well.
+# The field name 'id' or 'Id' in these universal tests that should work with
+# both variants of SF_PK. The name 'pk' is prefered here.
+# The name 'Id' is used in SQL code, but the name 'id' would work just as well.
 
 def refresh(obj: _M) -> _M:
     """Get the same object refreshed from the same db.
@@ -112,7 +111,7 @@ class BasicSOQLRoTest(TestCase, LazyTestMixin):
     def test_raw_translations(self) -> None:
         """Read a Contact raw and translate it to Lead fields."""
         contact = Contact.objects.all()[0]
-        # `translation` dictionary keys must be lowercase now
+        # `translation` dictionary key is lowercase
         false_lead_raw = list(Lead.objects.raw(
             "SELECT Id, LastName FROM Contact WHERE Id=%s", params=[contact.pk],
             translations={'lastname': 'Company'}))
@@ -270,7 +269,7 @@ class BasicSOQLRoTest(TestCase, LazyTestMixin):
                 with QuietSalesforceErrors(sf_alias):
                     duplicate.save()
             except salesforce.backend.base.SalesforceError as exc:
-                # TODO uncovered line, baybe bug
+                # TODO uncovered line, maybe bug
                 self.assertEqual(exc.data[0]['errorCode'], 'DUPLICATE_VALUE')  # type: ignore
             else:
                 self.assertRaises(salesforce.backend.base.SalesforceError, duplicate.save)
@@ -290,11 +289,6 @@ class BasicSOQLRoTest(TestCase, LazyTestMixin):
                 new_u.delete()
             if new_e:
                 new_e.delete()
-
-        # this had fail, therefore moved at the end and itemized for debugging
-        # qs = User.objects.exclude(apex_email_notification=None)
-        # print(qs.query.get_compiler('salesforce').as_sql())
-        # list(qs)
         list(User.objects.exclude(apex_email_notification=None))
 
     def test_update_date(self) -> None:
@@ -509,8 +503,8 @@ class BasicSOQLRoTest(TestCase, LazyTestMixin):
         if not triggers:
             self.skipTest("No object with milisecond resolution found.")
         self.assertTrue(isinstance(triggers[0].PreviousFireTime, datetime.datetime))
-        # The reliability of this is only 99.9%, therefore it is commented out.
-        # self.assertNotEqual(trigger.PreviousFireTime.microsecond, 0)
+        if all(trigger.PreviousFireTime.microsecond == 0 for trigger in triggers):
+            self.skipTest("Miliseconds == 0; That is possible with probability 0.1%, not error")
 
     @skipUnless(default_is_sf, "Default database should be any Salesforce.")
     def test_time_field(self) -> None:
@@ -803,7 +797,6 @@ class BasicSOQLRoTest(TestCase, LazyTestMixin):
     def test_cursor_execute_fetch(self) -> None:
         """Get results by cursor.execute(...); fetchone(), fetchmany(), fetchall()
         """
-        # TODO hy: fix for concurrency
         sql = "SELECT Id, LastName, FirstName, OwnerId FROM Contact LIMIT 2"
         cursor = connections[sf_alias].cursor()
         cursor.execute(sql)
@@ -970,8 +963,7 @@ class BasicSOQLRoTest(TestCase, LazyTestMixin):
         values_list = Contact.objects.values_list('pk', 'first_name', 'last_name')[:2]
         self.assertEqual(len(values_list), 2)
         v0 = values[0]
-        # it is a list in Django 2.1, but a tuple in Django 2.0
-        self.assertEqual(list(values_list[0]), [v0['pk'], v0['first_name'], v0['last_name']])
+        self.assertEqual(values_list[0], (v0['pk'], v0['first_name'], v0['last_name']))
 
     @skipUnless(default_is_sf, "Default database should be any Salesforce.")
     def test_double_delete(self) -> None:
@@ -1053,11 +1045,6 @@ class BasicSOQLRoTest(TestCase, LazyTestMixin):
             for x in objects:
                 x.delete()
 
-    # This should not be implemented due to Django conventions.
-    # def test_raw_aggregate(self):
-    #    # raises "TypeError: list indices must be integers, not str"
-    #    list(Contact.objects.raw("select Count() from Contact"))
-
     @skipUnless(default_is_sf, "Default database should be any Salesforce.")
     def test_only_fields(self) -> None:
         """Verify that access to "only" fields doesn't require a request, but others do.
@@ -1117,9 +1104,7 @@ class BasicSOQLRoTest(TestCase, LazyTestMixin):
 
     def test_incomplete_raw(self) -> None:
         """Test that omitted model fields can be queried by dot."""
-        # with self.lazy_assert_n_requests(2):  # problem - Why too much requests?
-        # raw query must contain the primary key (with the right capitalization, currently)
-        with self.lazy_assert_n_requests(1):  # TODO why two requests?
+        with self.lazy_assert_n_requests(1):
             ret = list(Contact.objects.raw("select Id from Contact where FirstName != '' limit 2000"))
         with self.lazy_assert_n_requests(1):
             last_name = ret[0].last_name
@@ -1143,14 +1128,10 @@ class BasicSOQLRoTest(TestCase, LazyTestMixin):
             qs = Lead.objects.filter(pk=test_lead.pk,
                                      owner__Username=current_user,
                                      last_modified_by__Username=current_user)
-            # Verify that a coplicated analysis is not performed on old Django
-            # so that the query can be at least somehow simply compiled to SOQL
-            # without exceptions, in order to prevent regressions.
             sql, params = qs.query.get_compiler('salesforce').as_sql()
-            # Verify expected filters in SOQL compiled by new Django
-            self.assertIn('Lead.Owner.Username = %s', sql)
-            self.assertIn('Lead.LastModifiedBy.Username = %s', sql)
-            # verify validity for SFDC, verify results
+            sql_parts = set(sql.split(' WHERE (')[1].rstrip(')').split(' AND '))
+            self.assertEqual(sql_parts,
+                             {'Lead.Id = %s', 'Lead.Owner.Username = %s', 'Lead.LastModifiedBy.Username = %s'})
             refreshed_lead = qs.get()
             self.assertEqual(refreshed_lead.pk, test_lead.pk)
         finally:
@@ -1223,7 +1204,6 @@ class BasicSOQLRoTest(TestCase, LazyTestMixin):
         try:
             qs = Contact.objects.filter(opportunity_roles__opportunity__name='test op')
             self.assertEqual(list(qs), 2 * [contact])
-            # self.assertEqual([x.pk for x in qs], 2 * [oppo.pk])
         finally:
             oc2.delete()
             oc.delete()
@@ -1244,10 +1224,19 @@ class BasicSOQLRoTest(TestCase, LazyTestMixin):
         list(qs2)
         qs = Attachment.objects.filter(parent__in=Test.objects.filter(contact__last_name='Johnson'))
         list(qs)
+        # test the '__range' lookup
+        qs = Test.objects.filter(contact__name__range=('a', 'b')).values('pk').sf(minimal_aliases=True)
+        expect_sql = "SELECT Id FROM django_Test__c WHERE (Contact__r.Name >= 'a' AND Contact__r.Name <= 'b')"
+        list(qs)
+        self.assertEqual(str(qs.query), expect_sql)
 
     def test_using_none(self) -> None:
         alias = getattr(settings, 'SALESFORCE_DB_ALIAS', 'salesforce')
         self.assertEqual(Contact.objects.using(None)._db, alias)
+
+    def test_with_offst(self) -> None:
+        list(Contact.objects.all()[1:2])
+        list(Contact.objects.all()[2000:])
 
     @skipUnless(default_is_sf, "depends on Salesforce database.")
     def test_dynamic_fields(self) -> None:
@@ -1273,7 +1262,6 @@ class BasicSOQLRoTest(TestCase, LazyTestMixin):
         """Test queryset with empty slice - if high/low limits equals"""
         self.assertEqual(len(Contact.objects.all()[1:1]), 0)
 
-    @skipUnless(DJANGO_21_PLUS, "Method .explain() is only in Django >= 2.1")
     @skipUnless(default_is_sf, "depends on Salesforce database.")
     def test_select_explan(self) -> None:
         """Test EXPLAIN SELECT ..."""
@@ -1285,6 +1273,32 @@ class BasicSOQLRoTest(TestCase, LazyTestMixin):
         api_usage: ApiUsage = connections[sf_alias].connection.api_usage
         self.assertGreater(api_usage.api_usage, 0)
         self.assertGreater(api_usage.api_limit, 5000)
+
+    def test_extract_date(self) -> None:
+        campaign = Campaign.objects.create(name='test something', number_sent=3)
+        try:
+            # group datetime by year
+            list(Campaign.objects.values('created_date__year').annotate(total=Sum('number_sent')))
+            # filter datetime last year
+            list(Campaign.objects.filter(created_date__year=2023, number_sent__gte=100))
+            # filter date last year and group by month
+            list(Campaign.objects.filter(start_date__year=2023).values('start_date__month').annotate(cnt=Count('pk')))
+            # filter datetatetime by month
+            list(Campaign.objects.filter(created_date__month=1))
+            # filter datetatetime by quarter
+            list(Campaign.objects.filter(created_date__quarter=1))
+            # group by date from a DateTime field
+            list(Campaign.objects.values(c_date=functions.TruncDate('created_date')).annotate(cnt=Count('start_date')))
+            # example group by all possible type of datetime lookup expressions
+            list(Campaign.objects.values('start_date__year', 'start_date__month', 'start_date__day',
+                                         'start_date__week', 'start_date__week_day',
+                                         'start_date__quarter').annotate(total=Count('pk')))
+            list(Campaign.objects.values('created_date__year', 'created_date__month', 'created_date__day',
+                                         'created_date__week', 'created_date__week_day',
+                                         'created_date__hour', 'created_date__quarter').annotate(total=Count('pk')))
+        finally:
+            campaign.delete()
+
 
 # ============= Tests that need setUp Lead ==================
 

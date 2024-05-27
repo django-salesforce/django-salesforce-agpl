@@ -10,7 +10,7 @@ from django.db.models import DO_NOTHING, Subquery
 from salesforce import fields, models
 from salesforce.dbapi import driver
 from salesforce.testrunner.example.models import (
-        Contact, Opportunity, OpportunityContactRole, ChargentOrder)
+        Contact, Opportunity, OpportunityContactRole, ChargentOrder, Test as TestModel)
 from salesforce.backend.test_helpers import default_is_sf, LazyTestMixin, skipUnless
 from salesforce.backend.utils import sobj_id
 
@@ -186,6 +186,14 @@ class TestTopologyCompiler(TestCase):
             ('A', 'C', (('Id', 'AId'),), 'C'),
             ('C', 'B', (('BId', 'Id'),), 'B')]
         self.assertTopo(alias_map_items, {'C': 'C', 'A': 'C.A', 'B': 'C.B'})
+
+
+class QueryTest(TestCase):
+    def test_where_related_in(self):
+        qs = TestModel.objects.filter(contact__name__in=('a', 'b')).values('pk')
+        soql = qs.query.get_compiler('salesforce').as_sql()[0]
+        expected = "SELECT django_Test__c.Id FROM django_Test__c WHERE django_Test__c.Contact__r.Name IN (%s, %s)"
+        self.assertEqual(soql, expected)
 
 
 class SfParamsTest(TestCase):

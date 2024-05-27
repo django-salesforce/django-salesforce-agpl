@@ -14,6 +14,30 @@ Some items here can be marked as "internal": not ready enough or
 experimental.
 
 
+[5.0.2] 2024-05-27
+------------------
+The main new features are in the improved query compiler
+
+* Remove: the old Python 3.7
+* Remove: the code for Django 2.0
+* Fix: many issues in the query compiler in edge cases:
+  - fix a query with offset, but without a limit (NotImplementedError)
+  - fix a '__range' lookup on a field of custom foreign key object (SalesforceError)
+  - fix a '=null' lookup.  It worked probably always correctly, but the old implementation was different from  standard lookups. It made it impossible to distinguish it from unsupported queries
+* Add: The query compiler is now much more precise. Most of unsupported queries will
+  write a warning before they are tried compiled. This is how users have
+  discovered some functional queries in the past.
+  No regression is known that a previously correct query would write a warning.
+* Add: Support for date and datetime lookup by year, quarter, month, day, week_day, hour
+  e.g. group this year by month:
+  .filter(date__year=2024).value('date__month').annotate(total=Sum('amount'))
+* Add: The method .sf(minimal_aliases=True) is not necessary
+  for ContentDocumentLink .filter(...); #259
+* Fix: Compile correctly: .filter(related_model__field__in=...) Fix #302
+* Fix: Prepare tests for Salesforce API 61.0 Summer '24
+* Add: Introspect Salesforce fields of type Formula to sf_formula="..." parameter
+
+
 [5.0.1] 2024-03-04
 ------------------
 * Add: Support for ``db_default`` field option in Django 5.0. It allows a seamless
