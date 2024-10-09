@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "django-salesforce"
+name = "django-salesforce-agpl"
 dynamic = [
     "version",
     "dependencies"
@@ -13,7 +13,7 @@ authors = [{name = "Hynek Cernoch", email="hynek@sdb.cz"}]
 maintainers = [{name = "Phil Christensen", email="phil@bubblehouse.org"}]
 description = "a Salesforce backend for Django's ORM"
 readme = "README.rst"
-license = {text = "MIT (or AGPL)"}
+license = {text = "AGPL"}
 keywords = ["django", "salesforce", "orm", "backend"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -23,7 +23,7 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/django-salesforce/django-salesforce"
+Homepage = "https://github.com/django-salesforce/django-salesforce-agpl"
 Funding = "https://github.com/sponsors/hynekcer"
 Tracker = "https://github.com/django-salesforce/django-salesforce/issues"
 
