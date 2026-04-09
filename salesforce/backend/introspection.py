@@ -21,15 +21,14 @@ from django.db.backends.base.introspection import (
 from django.utils.text import camel_case_to_spaces
 from django.db.backends.utils import CursorWrapper as _Cursor  # for typing
 
-from salesforce.backend import DJANGO_32_PLUS, DJANGO_50_PLUS
+from salesforce.backend import DJANGO_50_PLUS
 import salesforce.fields
 
 log = logging.getLogger(__name__)
 
 FieldInfo = namedtuple(  # type: ignore[misc]
     'FieldInfo',
-    'name type_code display_size internal_size precision scale null_ok default'
-    + (' collation' if DJANGO_32_PLUS else '') +
+    'name type_code display_size internal_size precision scale null_ok default collation' +
     ' params'  # the last name 'params' is our extension for Salesforce
 )
 assert FieldInfo._fields[:-1] == BaseFieldInfo._fields
@@ -52,6 +51,10 @@ PROBLEMATIC_OBJECTS = [
     'MLEngagementEvent',  # new in API 61.0 Summer '24 (no 'Id' field)
     'EvaluationJobResultEvent',  # new in API 62.0 Winter '25 (no 'Id' field)
     'AnalyticsTaskStatusEvent',  # new in API 63.0 Spring '25 (no 'Id' field)
+    'ActorReactiveAskRespEvent',  # new in API 65.0 Winter '26 (no 'Id' field)
+    'FlowDebugRefreshEvent',  # new in API 65.0 Winter '26 (no 'Id' field)
+    'DevopsRequestInfoEvent',  # new in API 66.0 Spring '26 (no 'Id' field)
+    'FeatureUsageEvent',  # new in API 66.0 Spring '26 (no 'Id' field)
 ]
 
 # this global variable is for `salesforce.management.commands.inspectdb`
@@ -263,7 +266,6 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
                 if params['max_len'] > field['length']:
                     field['length'] = params['max_len']
                 del params['max_len']
-            optional_kw = {'collation': None} if DJANGO_32_PLUS else {}
             # We prefer "length" over "byteLength" for "internal_size".
             # (because strings have usually: byteLength == 3 * length)
             if field['type'] == 'double' and field['precision'] == -1 and field['scale'] == -1:
@@ -278,9 +280,8 @@ class DatabaseIntrospection(BaseDatabaseIntrospection):
                 field['scale'],      # scale,
                 field['nillable'],   # null_ok,
                 params.get('default'),  # default
-                # 'collation' paramater is used only in Django >= 3.2. It is before 'params', but we pass it by **kw
-                params=params,
-                **optional_kw
+                collation=None,
+                params=params
             ))
         return result
 

@@ -7,10 +7,10 @@ django-salesforce
 .. image:: https://badge.fury.io/py/django-salesforce.svg
    :target: https://pypi.python.org/pypi/django-salesforce
 
-.. image:: https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg
+.. image:: https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue.svg
    :target: https://www.python.org/
 
-.. image:: https://img.shields.io/badge/Django-2.2%20%7C%203.0%2C%203.1%2C%203.2%20%7C%204.0%2C%204.1%2C%204.2%20%7C%205.0%2C%205.1%2C%205.2-blue.svg
+.. image:: https://img.shields.io/badge/Django-3.2%20%7C%204.0%2C%204.1%2C%204.2%20%7C%205.0%2C%205.1%2C%205.2%20%7C%206.0-blue.svg
    :target: https://www.djangoproject.com/
 
 This library allows you to load, edit and query the objects in any Salesforce instance
@@ -19,15 +19,15 @@ for most uses. It works by integrating with the Django ORM, allowing access to
 the objects in your SFDC instance (Salesforce .com) as if they were in a
 traditional database.
 
-Python 3.9 to 3.13, Django 2.2 to 5.2.
+Python 3.9 to 3.14, Django 3.2 to 6.0.
 
-Use with Django 5.2(LTS) requires currently an enteprise license key
+Use with Django 6.0 or with LTS >= 5.2.15 requires currently an enteprise license key
 DJSF_LICENSE_KEY unless you accept the AGPL license and install our otherwise identical
 package "django-salesforce-agpl" instead. The license keys are available to sponsors.
 Use with a pre-release Django version is free.
 
-.. The version 5.2 < 5.2.15 will be free automatically in Django-salesforce 6.0 when a key will be
-.. required for Django 6.0. Use with pre-release Django versions is free. see more in wiki
+.. The LTS Django versions >= 5.2.15 will be free automatically in Django-salesforce 6.2 when a key will be
+.. required for Django 6.2. Use with pre-release Django versions is free. see more in the wiki
 
 
 Quick Start
@@ -305,6 +305,7 @@ Backwards-incompatible changes
 
 The last most important:
 
+-  v6.0: Removed support for Django 2.2, 3.0, 3.1
 -  v5.2: Removed support for Python 3.8 and Django 2.1
 -  v5.0.2: Removed support for Python 3.7 and Django 2.0
 
